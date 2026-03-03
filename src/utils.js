@@ -5,7 +5,7 @@ const {
   ButtonStyle,
   StringSelectMenuBuilder,
 } = require("discord.js");
-const db = require("../database/db");
+const db = require("./database/db");
 
 const MAX_PLAYERS_PER_TABLE = 4;
 
