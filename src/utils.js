@@ -155,12 +155,14 @@ function buildPaymentEmbed(evening) {
  * Formate une date YYYY-MM-DD en format lisible
  */
 function formatDate(dateStr) {
+  if (!dateStr) return "date inconnue";
   const days = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
   const months = [
     "janvier", "février", "mars", "avril", "mai", "juin",
     "juillet", "août", "septembre", "octobre", "novembre", "décembre",
   ];
   const d = new Date(dateStr + "T12:00:00");
+  if (isNaN(d.getTime())) return dateStr;
   return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }
 
