@@ -27,7 +27,7 @@ function buildEveningEmbed(evening, horaires) {
 
   const dayType = evening.day_type || "jeudi";
   const isJeudi = dayType === "jeudi";
-  const title = isJeudi ? "Tabletop Thursdays" : "Tabletop Saturdays";
+  const title = isJeudi ? "Tabletop Night" : "Tabletop Afternoon";
   const address = process.env.EVENT_ADDRESS || "227 Avenue de la Couronne à Ixelles, dans le bâtiment L";
   const time = horaires || process.env.DEFAULT_EVENT_TIME || "18:30-23:30";
   const [startTime, endTime] = time.split("-");
