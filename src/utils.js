@@ -141,14 +141,20 @@ function buildReservationComponents(evening) {
     );
   }
 
-  // Bouton pour annuler sa résa
+  // Bouton pour annuler sa résa + vérifier son statut de paiement
   const cancelBtn = new ButtonBuilder()
     .setCustomId(`cancel_booking_${evening.id}`)
     .setLabel("Annuler ma réservation")
     .setStyle(ButtonStyle.Danger)
     .setEmoji("❌");
 
-  components.push(new ActionRowBuilder().addComponents(cancelBtn));
+  const statusBtn = new ButtonBuilder()
+    .setCustomId(`check_status_${evening.id}`)
+    .setLabel("Vérifier mon statut")
+    .setStyle(ButtonStyle.Primary)
+    .setEmoji("📋");
+
+  components.push(new ActionRowBuilder().addComponents(cancelBtn, statusBtn));
 
   return components;
 }

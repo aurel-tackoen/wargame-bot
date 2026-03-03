@@ -129,21 +129,16 @@ async function handleButton(interaction) {
       });
     }
 
-    // Vérifier que le membre est inscrit
     const booking = db.getBookingForMember(eveningId, interaction.user.id);
+
     if (!booking) {
       return interaction.reply({
-        content: "❌ Tu n'es pas inscrit à cette soirée. Inscris-toi d'abord via le message de réservation.",
+        content: "❌ Tu n'es pas inscrit à cette soirée. Inscris-toi d'abord via le menu ci-dessus.",
         flags: MessageFlags.Ephemeral,
       });
     }
 
-    // Vérifier le statut
-    const status = db.checkMemberStatus(
-      interaction.user.id,
-      evening.date,
-      eveningId
-    );
+    const status = db.checkMemberStatus(interaction.user.id, evening.date, eveningId);
 
     if (status.covered) {
       return interaction.reply({
@@ -155,8 +150,9 @@ async function handleButton(interaction) {
     // Pas couvert → proposer le bouton de paiement
     const payBtn = new ButtonBuilder()
       .setCustomId(`confirm_paid_${evening.id}`)
-      .setLabel("💰 J'ai payé la soirée")
-      .setStyle(ButtonStyle.Success);
+      .setLabel("J'ai payé la soirée")
+      .setStyle(ButtonStyle.Success)
+      .setEmoji("💰");
 
     const row = new ActionRowBuilder().addComponents(payBtn);
 
@@ -167,7 +163,7 @@ async function handleButton(interaction) {
     });
   }
 
-  // --- Confirmer le paiement (bouton éphémère) ---
+  // --- Confirmer le paiement (bouton éphémère ou DM) ---
   if (customId.startsWith("confirm_paid_")) {
     const eveningId = parseInt(customId.replace("confirm_paid_", ""));
     const evening = db.getEvening(eveningId);
@@ -187,12 +183,7 @@ async function handleButton(interaction) {
       });
     }
 
-    // Vérifier si déjà couvert
-    const status = db.checkMemberStatus(
-      interaction.user.id,
-      evening.date,
-      eveningId
-    );
+    const status = db.checkMemberStatus(interaction.user.id, evening.date, eveningId);
     if (status.covered) {
       return interaction.reply({
         content: `✅ Tu es déjà en règle ! ${status.reason}`,
@@ -200,24 +191,27 @@ async function handleButton(interaction) {
       });
     }
 
-    // Enregistrer le paiement
-    db.ensureMember(interaction.user.id, interaction.member.displayName);
-    db.declarePaid(eveningId, interaction.user.id);
-
-    // Mettre à jour l'embed de paiements (message parent du checkin)
-    try {
-      const checkinChannel = interaction.message.channel;
-      // Find the checkin message - the confirm_paid button is in an ephemeral message,
-      // so we need to find the original checkin message in the channel
-      const { embed, components } = buildPaymentEmbed(evening);
-      // Try to update the original interaction message's referenced message
-      if (interaction.message.reference?.messageId) {
-        const originalMsg = await checkinChannel.messages.fetch(interaction.message.reference.messageId);
-        await originalMsg.edit({ embeds: [embed], components });
+    // Résoudre le displayName (en serveur ou en DM)
+    let displayName = interaction.user.username;
+    if (interaction.member) {
+      displayName = interaction.member.displayName;
+    } else {
+      // En DM, tenter de récupérer le membre depuis le serveur
+      try {
+        const guildId = process.env.GUILD_ID;
+        const guild = interaction.client.guilds.cache.get(guildId);
+        if (guild) {
+          const member = await guild.members.fetch(interaction.user.id);
+          if (member) displayName = member.displayName;
+        }
+      } catch (err) {
+        // Fallback au username global
       }
-    } catch (err) {
-      console.error("Erreur mise à jour embed paiements:", err);
     }
+
+    // Enregistrer le paiement
+    db.ensureMember(interaction.user.id, displayName);
+    db.declarePaid(eveningId, interaction.user.id);
 
     await interaction.reply({
       content: `✅ Paiement déclaré pour le ${formatDate(evening.date)}. Merci !`,
@@ -227,10 +221,13 @@ async function handleButton(interaction) {
     // Log dans le journal
     try {
       const channelId = process.env.CHANNEL_JOURNAL;
-      const channel = interaction.guild.channels.cache.get(channelId);
+      const guildId = process.env.GUILD_ID;
+      // En DM, interaction.guild est null — récupérer le serveur via le client
+      const guild = interaction.guild || interaction.client.guilds.cache.get(guildId);
+      const channel = guild?.channels.cache.get(channelId);
       if (channel) {
         await channel.send(
-          `💰 **${interaction.member.displayName}** a déclaré avoir payé la soirée du ${formatDate(evening.date)}`
+          `💰 **${displayName}** a déclaré avoir payé la soirée du ${formatDate(evening.date)}`
         );
       }
     } catch (err) {

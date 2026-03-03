@@ -27,6 +27,12 @@ module.exports = {
             "• `date` — Date de la soirée (YYYY-MM-DD) *(par défaut : aujourd'hui)*",
         },
         {
+          name: "📨 /soiree relance",
+          value:
+            "Envoyer un DM de rappel aux membres qui n'ont pas payé *(admin)*\n" +
+            "• `date` — Date de la soirée (YYYY-MM-DD) *(par défaut : aujourd'hui)*",
+        },
+        {
           name: "👑 /abo annuel",
           value:
             "Enregistrer un abonnement annuel *(admin)*\n" +

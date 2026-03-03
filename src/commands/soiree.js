@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require("discord.js");
+const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } = require("discord.js");
 const db = require("../database/db");
 const {
   buildEveningEmbed,
@@ -57,6 +57,17 @@ module.exports = {
             .setDescription("Date de la soirée (YYYY-MM-DD) — par défaut aujourd'hui")
             .setRequired(false)
         )
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("relance")
+        .setDescription("Envoyer un DM de rappel aux membres qui n'ont pas payé (admin)")
+        .addStringOption((opt) =>
+          opt
+            .setName("date")
+            .setDescription("Date de la soirée (YYYY-MM-DD) — par défaut aujourd'hui")
+            .setRequired(false)
+        )
     ),
 
   async execute(interaction) {
@@ -66,6 +77,8 @@ module.exports = {
       await handleCreer(interaction);
     } else if (sub === "checkin") {
       await handleCheckin(interaction);
+    } else if (sub === "relance") {
+      await handleRelance(interaction);
     }
   },
 };
@@ -152,6 +165,101 @@ async function handleCreer(interaction) {
     content: `✅ Soirée du **${formatDate(dateStr)}** créée avec **${tables} tables** ! Le message de réservation a été posté dans <#${channelId}>.`,
     flags: MessageFlags.Ephemeral,
   });
+}
+
+async function handleRelance(interaction) {
+  if (!isAdmin(interaction.member)) {
+    return interaction.reply({
+      content: "❌ Seuls les admins peuvent envoyer des relances.",
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+
+  let dateStr = interaction.options.getString("date");
+  if (!dateStr) {
+    dateStr = new Date().toISOString().split("T")[0];
+  }
+
+  const evening = db.getEveningByDate(dateStr);
+  if (!evening) {
+    return interaction.reply({
+      content: `❌ Aucune soirée trouvée pour le ${formatDate(dateStr)}.`,
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+
+  const bookings = db.getBookings(evening.id);
+  if (bookings.length === 0) {
+    return interaction.reply({
+      content: `❌ Aucun inscrit pour la soirée du ${formatDate(dateStr)}.`,
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+
+  // Trouver les membres qui doivent payer
+  const unpaid = [];
+  for (const b of bookings) {
+    const status = db.checkMemberStatus(b.member_id, evening.date, evening.id);
+    if (!status.covered) {
+      unpaid.push(b);
+    }
+  }
+
+  if (unpaid.length === 0) {
+    return interaction.reply({
+      content: `✅ Tout le monde est en règle pour le ${formatDate(dateStr)} ! Aucune relance nécessaire.`,
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+  const isJeudi = (evening.day_type || "jeudi") === "jeudi";
+  const price = isJeudi ? "5€" : "7€";
+  let sent = 0;
+  let failed = 0;
+  const failedUsers = [];
+
+  for (const b of unpaid) {
+    try {
+      const member = await interaction.guild.members.fetch(b.member_id);
+
+      const embed = new EmbedBuilder()
+        .setTitle("💰 Rappel de paiement")
+        .setDescription(
+          `Salut **${member.displayName}** !\n\n` +
+          `Tu es inscrit(e) à la soirée du **${formatDate(evening.date)}** (Table ${b.table_number}) ` +
+          `mais ton paiement de **${price}** n'a pas encore été enregistré.\n\n` +
+          `Si tu as déjà payé, clique sur le bouton ci-dessous pour confirmer.`
+        )
+        .setColor(0xe74c3c)
+        .setFooter({ text: "Wargame Bot • Rappel automatique" })
+        .setTimestamp();
+
+      const payBtn = new ButtonBuilder()
+        .setCustomId(`confirm_paid_${evening.id}`)
+        .setLabel("J'ai payé la soirée")
+        .setStyle(ButtonStyle.Success)
+        .setEmoji("💰");
+
+      const row = new ActionRowBuilder().addComponents(payBtn);
+
+      await member.send({ embeds: [embed], components: [row] });
+      sent++;
+    } catch (err) {
+      console.error(`Erreur envoi DM à ${b.username}:`, err.message);
+      failed++;
+      failedUsers.push(b.username);
+    }
+  }
+
+  let report = `📨 Relance envoyée pour le **${formatDate(dateStr)}** :\n`;
+  report += `• ✅ ${sent} DM${sent > 1 ? "s" : ""} envoyé${sent > 1 ? "s" : ""}\n`;
+  if (failed > 0) {
+    report += `• ❌ ${failed} échec${failed > 1 ? "s" : ""} (DMs désactivés ou erreur) : ${failedUsers.join(", ")}\n`;
+  }
+
+  await interaction.editReply({ content: report });
 }
 
 async function handleCheckin(interaction) {
