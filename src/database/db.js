@@ -104,13 +104,12 @@ function addSubscription(memberId, type, registeredBy) {
   const start = now.toISOString().split("T")[0];
   let end;
   if (type === "annuel") {
-    const endDate = new Date(now);
-    endDate.setFullYear(endDate.getFullYear() + 1);
-    end = endDate.toISOString().split("T")[0];
+    // Fin de l'année civile en cours (31 décembre)
+    end = `${now.getFullYear()}-12-31`;
   } else {
-    const endDate = new Date(now);
-    endDate.setMonth(endDate.getMonth() + 1);
-    end = endDate.toISOString().split("T")[0];
+    // Fin du mois civil en cours (dernier jour du mois)
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    end = lastDay.toISOString().split("T")[0];
   }
   d.prepare(
     `INSERT INTO subscriptions (member_id, type, start_date, end_date, registered_by)
