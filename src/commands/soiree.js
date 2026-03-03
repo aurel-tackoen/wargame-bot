@@ -110,8 +110,8 @@ async function handleCreer(interaction) {
   }
 
   // Créer la soirée
-  db.ensureMember(interaction.user.id, interaction.user.username);
-  const eveningId = db.createEvening(dateStr, tables, interaction.user.id, dayType);
+  db.ensureMember(interaction.user.id, interaction.member.displayName);
+  const eveningId = db.createEvening(dateStr, tables, interaction.user.id, dayType, horaires);
   const evening = db.getEvening(eveningId);
 
   // Poster le message de réservation dans le channel dédié
@@ -125,7 +125,7 @@ async function handleCreer(interaction) {
     });
   }
 
-  const embed = buildEveningEmbed(evening, horaires);
+  const embed = buildEveningEmbed(evening, channel.name);
   const components = buildReservationComponents(evening);
 
   // Mentions des rôles configurés

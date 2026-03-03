@@ -25,10 +25,12 @@ module.exports = {
 };
 
 async function handleMemberRecap(interaction, targetUser) {
+  const targetMember = await interaction.guild.members.fetch(targetUser.id).catch(() => null);
+  const targetDisplayName = targetMember ? targetMember.displayName : targetUser.username;
   const history = db.getMemberHistory(targetUser.id);
 
   const embed = new EmbedBuilder()
-    .setTitle(`📊 Récap — ${targetUser.username}`)
+    .setTitle(`📊 Récap — ${targetDisplayName}`)
     .setColor(0x2b5797)
     .setThumbnail(targetUser.displayAvatarURL());
 

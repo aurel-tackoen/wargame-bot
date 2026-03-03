@@ -61,7 +61,9 @@ async function handleAdd(interaction, type) {
   }
 
   const targetUser = interaction.options.getUser("membre");
-  db.ensureMember(targetUser.id, targetUser.username);
+  const targetMember = await interaction.guild.members.fetch(targetUser.id).catch(() => null);
+  const targetDisplayName = targetMember ? targetMember.displayName : targetUser.username;
+  db.ensureMember(targetUser.id, targetDisplayName);
 
   const { start, end } = db.addSubscription(
     targetUser.id,
@@ -71,23 +73,25 @@ async function handleAdd(interaction, type) {
 
   const emoji = type === "annuel" ? "👑" : "📅";
   await interaction.reply({
-    content: `${emoji} Abonnement **${type}** enregistré pour **${targetUser.username}**\n📆 Du **${start}** au **${end}**`,
+    content: `${emoji} Abonnement **${type}** enregistré pour **${targetDisplayName}**\n📆 Du **${start}** au **${end}**`,
   });
 
   // Log dans le journal
   await logToJournal(
     interaction,
-    `${emoji} **Abonnement ${type}** enregistré pour **${targetUser.username}** (par ${interaction.user.username}) — du ${start} au ${end}`
+    `${emoji} **Abonnement ${type}** enregistré pour **${targetDisplayName}** (par ${interaction.member.displayName}) — du ${start} au ${end}`
   );
 }
 
 async function handleStatus(interaction) {
   const targetUser = interaction.options.getUser("membre") || interaction.user;
+  const targetMember = await interaction.guild.members.fetch(targetUser.id).catch(() => null);
+  const targetDisplayName = targetMember ? targetMember.displayName : targetUser.username;
   const today = new Date().toISOString().split("T")[0];
   const sub = db.getActiveSubscription(targetUser.id, today);
 
   const embed = new EmbedBuilder()
-    .setTitle(`📋 Statut — ${targetUser.username}`)
+    .setTitle(`📋 Statut — ${targetDisplayName}`)
     .setColor(sub ? 0x2ecc71 : 0xe74c3c)
     .setThumbnail(targetUser.displayAvatarURL());
 

@@ -49,6 +49,8 @@ async function handleCorriger(interaction) {
   }
 
   const targetUser = interaction.options.getUser("membre");
+  const targetMember = await interaction.guild.members.fetch(targetUser.id).catch(() => null);
+  const targetDisplayName = targetMember ? targetMember.displayName : targetUser.username;
   let dateStr = interaction.options.getString("date");
   const action = interaction.options.getString("action") || "ajouter";
 
@@ -64,17 +66,17 @@ async function handleCorriger(interaction) {
     });
   }
 
-  db.ensureMember(targetUser.id, targetUser.username);
+  db.ensureMember(targetUser.id, targetDisplayName);
 
   if (action === "ajouter") {
     db.declarePaid(evening.id, targetUser.id);
     await interaction.reply({
-      content: `✅ Paiement de **${targetUser.username}** pour le ${formatDate(dateStr)} marqué comme **payé** (par ${interaction.user.username}).`,
+      content: `✅ Paiement de **${targetDisplayName}** pour le ${formatDate(dateStr)} marqué comme **payé** (par ${interaction.member.displayName}).`,
     });
   } else {
     db.removePaid(evening.id, targetUser.id);
     await interaction.reply({
-      content: `🔄 Paiement de **${targetUser.username}** pour le ${formatDate(dateStr)} **supprimé** (par ${interaction.user.username}).`,
+      content: `🔄 Paiement de **${targetDisplayName}** pour le ${formatDate(dateStr)} **supprimé** (par ${interaction.member.displayName}).`,
     });
   }
 
@@ -85,7 +87,7 @@ async function handleCorriger(interaction) {
     if (channel) {
       const emoji = action === "ajouter" ? "✅" : "🔄";
       await channel.send(
-        `${emoji} **Correction admin** : paiement de **${targetUser.username}** pour le ${formatDate(dateStr)} — ${action === "ajouter" ? "marqué payé" : "supprimé"} (par ${interaction.user.username})`
+        `${emoji} **Correction admin** : paiement de **${targetDisplayName}** pour le ${formatDate(dateStr)} — ${action === "ajouter" ? "marqué payé" : "supprimé"} (par ${interaction.member.displayName})`
       );
     }
   } catch (err) {

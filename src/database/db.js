@@ -45,6 +45,7 @@ function initTables() {
       date TEXT NOT NULL UNIQUE,
       total_tables INTEGER NOT NULL,
       day_type TEXT NOT NULL DEFAULT 'jeudi',
+      horaires TEXT,
       message_id TEXT,
       channel_id TEXT,
       created_by TEXT NOT NULL,
@@ -75,6 +76,9 @@ function initTables() {
   const cols = db.prepare(`PRAGMA table_info(evenings)`).all();
   if (!cols.find((c) => c.name === "day_type")) {
     db.exec(`ALTER TABLE evenings ADD COLUMN day_type TEXT NOT NULL DEFAULT 'jeudi'`);
+  }
+  if (!cols.find((c) => c.name === "horaires")) {
+    db.exec(`ALTER TABLE evenings ADD COLUMN horaires TEXT`);
   }
 }
 
@@ -143,11 +147,11 @@ function getAllSubscriptions() {
 // HELPERS - SOIRÉES
 // ============================================
 
-function createEvening(date, totalTables, createdBy, dayType = "jeudi") {
+function createEvening(date, totalTables, createdBy, dayType = "jeudi", horaires = null) {
   const d = getDb();
   const result = d.prepare(
-    `INSERT INTO evenings (date, total_tables, day_type, created_by) VALUES (?, ?, ?, ?)`
-  ).run(date, totalTables, dayType, createdBy);
+    `INSERT INTO evenings (date, total_tables, day_type, horaires, created_by) VALUES (?, ?, ?, ?, ?)`
+  ).run(date, totalTables, dayType, horaires, createdBy);
   return result.lastInsertRowid;
 }
 

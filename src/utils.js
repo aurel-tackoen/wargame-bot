@@ -12,7 +12,7 @@ const MAX_PLAYERS_PER_TABLE = 4;
 /**
  * Construit l'embed de réservation pour une soirée (style annonce)
  */
-function buildEveningEmbed(evening, horaires) {
+function buildEveningEmbed(evening, channelName) {
   const bookings = db.getBookings(evening.id);
   const tables = {};
 
@@ -29,7 +29,7 @@ function buildEveningEmbed(evening, horaires) {
   const isJeudi = dayType === "jeudi";
   const title = isJeudi ? "Tabletop Night" : "Tabletop Afternoon";
   const address = process.env.EVENT_ADDRESS || "227 Avenue de la Couronne à Ixelles, dans le bâtiment L";
-  const time = horaires || process.env.DEFAULT_EVENT_TIME || "18:30-23:30";
+  const time = evening.horaires || process.env.DEFAULT_EVENT_TIME || "18:30-23:30";
   const [startTime, endTime] = time.split("-");
 
   // Format time for display (24h → 12h AM/PM)
@@ -90,8 +90,13 @@ function buildEveningEmbed(evening, horaires) {
   const embed = new EmbedBuilder()
     .setTitle(`🎲 ${title}`)
     .setDescription(desc)
-    .setColor(0x2b5797)
-    .addFields({
+    .setColor(0x2b5797);
+
+  if (channelName) {
+    embed.setAuthor({ name: `#${channelName}` });
+  }
+
+  embed.addFields({
       name: "🕐 Horaires",
       value: `**${formatDate(evening.date)}** de ${formatTime(startTime)} à ${formatTime(endTime)}\n[Ajouter à Google Calendar](${googleUrl})\n⏳ ${daysText}`,
     })
@@ -188,14 +193,12 @@ function buildPaymentEmbed(evening) {
 
   const components = [];
 
-  if (needsPayment.length > 0) {
-    const payBtn = new ButtonBuilder()
-      .setCustomId(`declare_paid_${evening.id}`)
-      .setLabel("💰 J'ai payé la soirée")
-      .setStyle(ButtonStyle.Success);
+  const statusBtn = new ButtonBuilder()
+    .setCustomId(`check_status_${evening.id}`)
+    .setLabel("📋 Vérifier mon statut")
+    .setStyle(ButtonStyle.Primary);
 
-    components.push(new ActionRowBuilder().addComponents(payBtn));
-  }
+  components.push(new ActionRowBuilder().addComponents(statusBtn));
 
   return { embed, components };
 }
