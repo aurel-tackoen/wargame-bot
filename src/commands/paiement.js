@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require("discord.js");
 const db = require("../database/db");
 const { isAdmin, formatDate } = require("../utils");
 
@@ -44,7 +44,7 @@ async function handleCorriger(interaction) {
   if (!isAdmin(interaction.member)) {
     return interaction.reply({
       content: "❌ Seuls les admins peuvent corriger un paiement.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -60,7 +60,7 @@ async function handleCorriger(interaction) {
   if (!evening) {
     return interaction.reply({
       content: `❌ Aucune soirée trouvée pour le ${formatDate(dateStr)}.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 

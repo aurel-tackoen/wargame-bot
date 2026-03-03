@@ -5,6 +5,7 @@ const {
   Collection,
   Events,
   ActivityType,
+  MessageFlags,
 } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
@@ -70,7 +71,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     console.error(`❌ Erreur commande /${interaction.commandName}:`, error);
     const reply = {
       content: "❌ Une erreur est survenue. Réessaie plus tard.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     };
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp(reply);

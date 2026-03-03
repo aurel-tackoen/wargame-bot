@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require("discord.js");
 const db = require("../database/db");
 const { isAdmin, formatDate } = require("../utils");
 
@@ -81,7 +81,7 @@ async function handleMemberRecap(interaction, targetUser) {
     text: `${total} soirée(s) au total • ${unpaid} impayée(s)`,
   });
 
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }
 
 async function handleGlobalRecap(interaction) {
@@ -89,7 +89,7 @@ async function handleGlobalRecap(interaction) {
     return interaction.reply({
       content:
         "❌ Le récap global est réservé aux admins. Tu peux utiliser `/recap @membre` pour voir ton propre historique, ou `/abo status` pour ton abonnement.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -118,7 +118,7 @@ async function handleGlobalRecap(interaction) {
   if (recentEvenings.length === 0) {
     return interaction.reply({
       content: "Aucune soirée enregistrée pour le moment.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -146,5 +146,5 @@ async function handleGlobalRecap(interaction) {
     })
     .setTimestamp();
 
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }

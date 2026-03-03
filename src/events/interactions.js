@@ -1,4 +1,5 @@
 const db = require("../database/db");
+const { MessageFlags } = require("discord.js");
 const {
   buildEveningEmbed,
   buildReservationComponents,
@@ -42,7 +43,7 @@ async function handleSelectMenu(interaction) {
     if (!evening) {
       return interaction.reply({
         content: "❌ Soirée introuvable.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -52,7 +53,7 @@ async function handleSelectMenu(interaction) {
     if (existing) {
       return interaction.reply({
         content: `❌ Tu es déjà inscrit à la **Table ${existing.table_number}**. Annule d'abord ta réservation si tu veux changer.`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -61,7 +62,7 @@ async function handleSelectMenu(interaction) {
     if (occupancy >= MAX_PLAYERS_PER_TABLE) {
       return interaction.reply({
         content: `❌ La **Table ${tableNumber}** est complète !`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -73,7 +74,7 @@ async function handleSelectMenu(interaction) {
 
     await interaction.reply({
       content: `✅ Tu es inscrit à la **Table ${tableNumber}** pour le ${formatDate(evening.date)} !`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 }
@@ -93,7 +94,7 @@ async function handleButton(interaction) {
     if (!evening) {
       return interaction.reply({
         content: "❌ Soirée introuvable.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -101,7 +102,7 @@ async function handleButton(interaction) {
     if (!existing) {
       return interaction.reply({
         content: "❌ Tu n'es pas inscrit à cette soirée.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -112,7 +113,7 @@ async function handleButton(interaction) {
 
     await interaction.reply({
       content: `✅ Ta réservation pour le ${formatDate(evening.date)} a été annulée.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -124,7 +125,7 @@ async function handleButton(interaction) {
     if (!evening) {
       return interaction.reply({
         content: "❌ Soirée introuvable.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -133,7 +134,7 @@ async function handleButton(interaction) {
     if (!booking) {
       return interaction.reply({
         content: "❌ Tu n'es pas inscrit à cette soirée.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -146,7 +147,7 @@ async function handleButton(interaction) {
     if (status.covered) {
       return interaction.reply({
         content: `Tu es déjà en règle : ${status.reason}`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -164,7 +165,7 @@ async function handleButton(interaction) {
 
     await interaction.reply({
       content: `✅ Paiement déclaré pour le ${formatDate(evening.date)}. Merci !`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
 
     // Log dans le journal

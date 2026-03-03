@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require("discord.js");
 const db = require("../database/db");
 const { isAdmin, formatDate } = require("../utils");
 
@@ -56,7 +56,7 @@ async function handleAdd(interaction, type) {
   if (!isAdmin(interaction.member)) {
     return interaction.reply({
       content: "❌ Seuls les admins peuvent enregistrer un abonnement.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -119,14 +119,14 @@ async function handleStatus(interaction) {
     });
   }
 
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }
 
 async function handleListe(interaction) {
   if (!isAdmin(interaction.member)) {
     return interaction.reply({
       content: "❌ Seuls les admins peuvent voir la liste complète.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -135,7 +135,7 @@ async function handleListe(interaction) {
   if (subs.length === 0) {
     return interaction.reply({
       content: "Aucun membre enregistré.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -166,7 +166,7 @@ async function handleListe(interaction) {
     .setColor(0x2b5797)
     .setTimestamp();
 
-  await interaction.reply({ embeds: [embed], ephemeral: true });
+  await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }
 
 async function logToJournal(interaction, message) {

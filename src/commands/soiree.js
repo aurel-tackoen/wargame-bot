@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
+const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require("discord.js");
 const db = require("../database/db");
 const {
   buildEveningEmbed,
@@ -58,7 +58,7 @@ async function handleCreer(interaction) {
   if (!isAdmin(interaction.member)) {
     return interaction.reply({
       content: "❌ Seuls les admins peuvent créer une soirée.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -69,7 +69,7 @@ async function handleCreer(interaction) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
     return interaction.reply({
       content: "❌ Format de date invalide. Utilise **YYYY-MM-DD** (ex: 2025-03-15).",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -78,7 +78,7 @@ async function handleCreer(interaction) {
   if (isNaN(testDate.getTime())) {
     return interaction.reply({
       content: "❌ Date invalide.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -87,7 +87,7 @@ async function handleCreer(interaction) {
   if (existing) {
     return interaction.reply({
       content: `❌ Il y a déjà une soirée le ${formatDate(dateStr)}.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -103,19 +103,28 @@ async function handleCreer(interaction) {
   if (!channel) {
     return interaction.reply({
       content: `✅ Soirée créée, mais je n'ai pas trouvé le channel de réservation. Vérifie CHANNEL_RESERVATIONS dans la config.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
   const embed = buildEveningEmbed(evening);
   const components = buildReservationComponents(evening);
 
-  const msg = await channel.send({ embeds: [embed], components });
+  let msg;
+  try {
+    msg = await channel.send({ embeds: [embed], components });
+  } catch (err) {
+    console.error("Erreur envoi message réservation:", err);
+    return interaction.reply({
+      content: `✅ Soirée créée, mais je n'ai pas pu poster dans <#${channelId}>. Vérifie que j'ai la permission **Envoyer des messages** dans ce salon.`,
+      flags: MessageFlags.Ephemeral,
+    });
+  }
   db.updateEveningMessage(eveningId, msg.id, channel.id);
 
   await interaction.reply({
     content: `✅ Soirée du **${formatDate(dateStr)}** créée avec **${tables} tables** ! Le message de réservation a été posté dans <#${channelId}>.`,
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }
 
@@ -123,7 +132,7 @@ async function handleCheckin(interaction) {
   if (!isAdmin(interaction.member)) {
     return interaction.reply({
       content: "❌ Seuls les admins peuvent lancer un check-in.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
@@ -136,7 +145,7 @@ async function handleCheckin(interaction) {
   if (!evening) {
     return interaction.reply({
       content: `❌ Aucune soirée trouvée pour le ${formatDate(dateStr)}.`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 
