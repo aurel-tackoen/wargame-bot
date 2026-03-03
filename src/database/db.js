@@ -282,10 +282,20 @@ function getMemberHistory(memberId) {
   return { bookings, subscriptions: subs };
 }
 
+function removeActiveSubscription(memberId) {
+  const d = getDb();
+  const today = new Date().toISOString().split("T")[0];
+  return d.prepare(
+    `DELETE FROM subscriptions
+     WHERE member_id = ? AND start_date <= ? AND end_date >= ?`
+  ).run(memberId, today, today);
+}
+
 module.exports = {
   getDb,
   ensureMember,
   addSubscription,
+  removeActiveSubscription,
   getActiveSubscription,
   getAllSubscriptions,
   createEvening,

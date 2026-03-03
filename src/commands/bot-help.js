@@ -55,6 +55,12 @@ module.exports = {
           value: "Vue d'ensemble de tous les abonnements actifs *(admin)*",
         },
         {
+          name: "🗑️ /abo supprimer",
+          value:
+            "Supprimer l'abonnement actif d'un membre *(admin)*\n" +
+            "• `membre` — Le membre *(obligatoire)*",
+        },
+        {
           name: "💰 /paiement corriger",
           value:
             "Corriger le statut de paiement d'un membre *(admin)*\n" +

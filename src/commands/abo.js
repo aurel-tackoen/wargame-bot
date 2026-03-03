@@ -37,6 +37,14 @@ module.exports = {
       sub
         .setName("liste")
         .setDescription("Vue d'ensemble de tous les abonnements actifs")
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("supprimer")
+        .setDescription("Supprimer l'abonnement actif d'un membre (admin)")
+        .addUserOption((opt) =>
+          opt.setName("membre").setDescription("Le membre").setRequired(true)
+        )
     ),
 
   async execute(interaction) {
@@ -48,6 +56,8 @@ module.exports = {
       await handleStatus(interaction);
     } else if (sub === "liste") {
       await handleListe(interaction);
+    } else if (sub === "supprimer") {
+      await handleSupprimer(interaction);
     }
   },
 };
@@ -171,6 +181,40 @@ async function handleListe(interaction) {
     .setTimestamp();
 
   await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+}
+
+async function handleSupprimer(interaction) {
+  if (!isAdmin(interaction.member)) {
+    return interaction.reply({
+      content: "❌ Seuls les admins peuvent supprimer un abonnement.",
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+
+  const targetUser = interaction.options.getUser("membre");
+  const targetMember = await interaction.guild.members.fetch(targetUser.id).catch(() => null);
+  const targetDisplayName = targetMember ? targetMember.displayName : targetUser.username;
+  const today = new Date().toISOString().split("T")[0];
+  const activeSub = db.getActiveSubscription(targetUser.id, today);
+
+  if (!activeSub) {
+    return interaction.reply({
+      content: `❌ **${targetDisplayName}** n'a aucun abonnement actif.`,
+      flags: MessageFlags.Ephemeral,
+    });
+  }
+
+  const result = db.removeActiveSubscription(targetUser.id);
+
+  const emoji = activeSub.type === "annuel" ? "👑" : "📅";
+  await interaction.reply({
+    content: `🗑️ Abonnement **${activeSub.type}** de **${targetDisplayName}** supprimé (était valide jusqu'au ${activeSub.end_date}).`,
+  });
+
+  await logToJournal(
+    interaction,
+    `🗑️ **Abonnement ${activeSub.type}** de **${targetDisplayName}** supprimé par ${interaction.member.displayName}`
+  );
 }
 
 async function logToJournal(interaction, message) {
