@@ -66,6 +66,9 @@ GUILD_ID=id_de_ton_serveur
 CHANNEL_RESERVATIONS=id_du_channel_reservations
 CHANNEL_JOURNAL=id_du_channel_journal
 ADMIN_ROLE_ID=id_du_role_admin
+ROLE_PING_IDS=id_role_1,id_role_2
+EVENT_ADDRESS=227 Avenue de la Couronne à Ixelles, dans le bâtiment L
+DEFAULT_EVENT_TIME=18:30-23:30
 ```
 
 ---
@@ -116,10 +119,14 @@ Le bot est maintenant en ligne. **Il doit rester lancé** pour fonctionner.
 
 Dans n'importe quel channel, tape :
 ```
-/soiree creer date:2025-03-15 tables:8
+/soiree creer date:2026-03-12 tables:9 type:Jeudi (5€)
+```
+Tu peux aussi spécifier des horaires personnalisés :
+```
+/soiree creer date:2026-03-14 tables:9 type:Samedi (7€) horaires:19:00-00:00
 ```
 
-Le bot poste automatiquement un message dans `#réservations` avec les tables et des boutons pour s'inscrire.
+Le bot poste automatiquement un message d'annonce dans `#réservations` avec les infos (tarifs, adresse, horaires, lien Google Calendar) et les tables disponibles pour s'inscrire. Les rôles configurés dans `ROLE_PING_IDS` sont automatiquement mentionnés.
 
 ### Les membres s'inscrivent
 
@@ -210,7 +217,8 @@ wargame-bot/
 │   │   ├── soiree.js     ← /soiree creer, /soiree checkin
 │   │   ├── abo.js        ← /abo annuel, mensuel, status, liste
 │   │   ├── paiement.js   ← /paiement corriger
-│   │   └── recap.js      ← /recap
+│   │   ├── recap.js      ← /recap
+│   │   └── bot-help.js   ← /bot-help
 │   ├── database/
 │   │   └── db.js         ← Base de données et requêtes
 │   └── events/

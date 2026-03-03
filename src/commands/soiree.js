@@ -30,6 +30,22 @@ module.exports = {
             .setMinValue(1)
             .setMaxValue(50)
         )
+        .addStringOption((opt) =>
+          opt
+            .setName("type")
+            .setDescription("Type de soirée (jeudi ou samedi)")
+            .setRequired(true)
+            .addChoices(
+              { name: "Jeudi (5€)", value: "jeudi" },
+              { name: "Samedi (7€)", value: "samedi" }
+            )
+        )
+        .addStringOption((opt) =>
+          opt
+            .setName("horaires")
+            .setDescription("Horaires (HH:MM-HH:MM) — par défaut depuis la config")
+            .setRequired(false)
+        )
     )
     .addSubcommand((sub) =>
       sub
@@ -64,6 +80,8 @@ async function handleCreer(interaction) {
 
   const dateStr = interaction.options.getString("date");
   const tables = interaction.options.getInteger("tables");
+  const dayType = interaction.options.getString("type");
+  const horaires = interaction.options.getString("horaires") || process.env.DEFAULT_EVENT_TIME || "18:30-23:30";
 
   // Validation du format de date
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
@@ -93,7 +111,7 @@ async function handleCreer(interaction) {
 
   // Créer la soirée
   db.ensureMember(interaction.user.id, interaction.user.username);
-  const eveningId = db.createEvening(dateStr, tables, interaction.user.id);
+  const eveningId = db.createEvening(dateStr, tables, interaction.user.id, dayType);
   const evening = db.getEvening(eveningId);
 
   // Poster le message de réservation dans le channel dédié
@@ -107,12 +125,20 @@ async function handleCreer(interaction) {
     });
   }
 
-  const embed = buildEveningEmbed(evening);
+  const embed = buildEveningEmbed(evening, horaires);
   const components = buildReservationComponents(evening);
+
+  // Mentions des rôles configurés
+  const rolePingIds = (process.env.ROLE_PING_IDS || "").split(",").filter(Boolean);
+  const roleMentions = rolePingIds.map((id) => `<@&${id.trim()}>`).join(" ");
 
   let msg;
   try {
-    msg = await channel.send({ embeds: [embed], components });
+    msg = await channel.send({
+      content: roleMentions || undefined,
+      embeds: [embed],
+      components,
+    });
   } catch (err) {
     console.error("Erreur envoi message réservation:", err);
     return interaction.reply({

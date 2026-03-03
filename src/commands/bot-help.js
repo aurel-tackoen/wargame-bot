@@ -16,7 +16,9 @@ module.exports = {
           value:
             "Créer une nouvelle soirée *(admin)*\n" +
             "• `date` — Date de la soirée (YYYY-MM-DD) *(obligatoire)*\n" +
-            "• `tables` — Nombre de tables disponibles, 1-50 *(obligatoire)*",
+            "• `tables` — Nombre de tables disponibles, 1-50 *(obligatoire)*\n" +
+            "• `type` — Jeudi (5€) ou Samedi (7€) *(obligatoire)*\n" +
+            "• `horaires` — Horaires (HH:MM-HH:MM) *(par défaut : config serveur)*",
         },
         {
           name: "🎲 /soiree checkin",
