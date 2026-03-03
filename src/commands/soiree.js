@@ -218,6 +218,7 @@ async function handleRelance(interaction) {
   const price = isJeudi ? "5€" : "7€";
   let sent = 0;
   let failed = 0;
+  const sentUsers = [];
   const failedUsers = [];
 
   for (const b of unpaid) {
@@ -246,6 +247,7 @@ async function handleRelance(interaction) {
 
       await member.send({ embeds: [embed], components: [row] });
       sent++;
+      sentUsers.push(member.displayName);
     } catch (err) {
       console.error(`Erreur envoi DM à ${b.username}:`, err.message);
       failed++;
@@ -254,7 +256,7 @@ async function handleRelance(interaction) {
   }
 
   let report = `📨 Relance envoyée pour le **${formatDate(dateStr)}** :\n`;
-  report += `• ✅ ${sent} DM${sent > 1 ? "s" : ""} envoyé${sent > 1 ? "s" : ""}\n`;
+  report += `• ✅ ${sent} DM${sent > 1 ? "s" : ""} envoyé${sent > 1 ? "s" : ""} : ${sentUsers.join(", ")}\n`;
   if (failed > 0) {
     report += `• ❌ ${failed} échec${failed > 1 ? "s" : ""} (DMs désactivés ou erreur) : ${failedUsers.join(", ")}\n`;
   }
